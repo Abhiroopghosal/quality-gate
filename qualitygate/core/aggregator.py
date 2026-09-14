@@ -9,6 +9,37 @@ from qualitygate.core.result import RuleResult
 
 # list(rule_result) = [rule_result1, rule_result2]
 
+def compute_quality_score(results : list[RuleResult]) -> float:
+    """
+    Quality_Score = (max_weight - failed_weight)/max_weight * 100
+    max_weight -> the ideal case scenario where all completed soft rules have passed so just sum(rule_weight)
+    quality_score -> the deviation from the ideal state
+    failed_weight should be graded on the basis of the deviation from the threshold. If the threshold = 3.1% and actual1 = 3.5% and actual2 = 4% then they should be
+    weighed differently 
+    Below threshold (passing) risk is intentionally NOT
+    penalized here within a single batch a passing rule is fine. That
+    below-threshold risk is retained on the RuleResult for History rules,
+    which read risk trends across batches to detect drift toward threshold.
+
+    Returns 100.0 when there are no completed soft rules to score.
+    """
+    max_weight = 0.0
+    failed_weight = 0.0
+    for r in results:
+        if r.severity is Severity.SOFT and r.execution_status is ExecutionStatus.COMPLETED:
+            max_weight += r.weight
+
+            if r.validation_status is ValidationStatus.FAIL:
+                failed_weight += r.weight * r.risk
+
+    if max_weight ==  0:
+        return 100.0
+    quality_score = (max_weight - failed_weight)/ max_weight * 100
+    return quality_score
+
+
+
+
 def aggregate(rule_results : list[RuleResult], dataset : str, batch_id : str)-> ValidationSummary :
     passed_rules = 0
     failed_rules = 0
@@ -33,7 +64,7 @@ def aggregate(rule_results : list[RuleResult], dataset : str, batch_id : str)-> 
     total_rules = len(rule_results)
 
         
-    quality_score = 0.0
+    quality_score = compute_quality_score(rule_results)
 
     return ValidationSummary(
         rule_results =rule_results,
