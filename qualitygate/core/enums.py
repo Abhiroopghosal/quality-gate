@@ -26,3 +26,10 @@ class SkipReason(str, Enum):
     NOT_APPLICABLE = "NOT_APPLICABLE" # rule not applicable for the dataset
     DEPENDENCY_NOT_SATISFIED = "DEPENDENCY_NOT_SATISFIED" #rule could apply, but something it depends on didn't satisfy its prerequisites
 
+
+class DecisionStatus(str, Enum):
+    #for the decision engine, we need verdicts of the sort:
+    #either pass/quarantine/system_error
+    PASS = "PASS"
+    QUARANTINE = "QUARANTINE"
+    SYSTEM_ERROR = "SYSTEM_ERROR"
