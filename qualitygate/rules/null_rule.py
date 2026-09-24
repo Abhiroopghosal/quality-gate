@@ -17,6 +17,22 @@ class NullRule(ValidationRule):
 
 
         total = df.count()
+        if total == 0:
+            elapsed_time = (started - time.perf_counter()) * 1000
+            return RuleResult(
+                rule_name= self.rule_name,
+                rule_category= self.rule_category,
+                target= self.target,
+                execution_status= ExecutionStatus.COMPLETED,
+                validation_status=ValidationStatus.NOT_EVALUATED,
+                severity=self.severity,
+                weight= self.weight,
+                evidence="Empty Batch- Nothing to evaluate",
+                metrics={"null_count": 0, "null_rate" : 0, "total_rows" : 0},
+                execution_time_ms= elapsed_time,
+                risk= 0.0
+            )
+
         null_count = df.filter(F.col(self.target).isNull()).count()
 
         null_rate = null_count / total
@@ -26,7 +42,7 @@ class NullRule(ValidationRule):
                 verdict = ValidationStatus.FAIL 
                 risk = 1.0
                 evidence = "null is not permitted"
-            elif null_count == 0:
+            else:
                 verdict = ValidationStatus.PASS
                 risk = 0.0
                 evidence = "Everything in place"
