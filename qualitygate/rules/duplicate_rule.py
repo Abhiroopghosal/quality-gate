@@ -5,7 +5,9 @@ from qualitygate.core.result import RuleResult
 from qualitygate.core.enums import ExecutionStatus, ValidationStatus, Severity
 import time
 from qualitygate.core.grading import grade_soft
+from qualitygate.rules.registry import register
 
+@register
 class DuplicateRule(ValidationRule):
     rule_name = "DuplicateRule"
     rule_category = "UNIQUENESS"

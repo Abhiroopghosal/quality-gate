@@ -5,7 +5,9 @@ from qualitygate.core.rule import ValidationRule
 from qualitygate.core.grading import grade_soft
 from qualitygate.core.result import RuleResult
 import time
+from qualitygate.rules.registry import register
 
+@register
 class NullRule(ValidationRule):
     rule_name = "NullRule"
     rule_category = "COMPLETENESS"
@@ -18,7 +20,7 @@ class NullRule(ValidationRule):
 
         total = df.count()
         if total == 0:
-            elapsed_time = (started - time.perf_counter()) * 1000
+            elapsed_time = (time.perf_counter() - started) * 1000
             return RuleResult(
                 rule_name= self.rule_name,
                 rule_category= self.rule_category,
