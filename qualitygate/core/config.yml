@@ -1,0 +1,25 @@
+#config.yaml (dummy config)
+
+- rule: NullRule
+  target : id
+  severity : critical
+  weight : 15
+
+- rule: NullRule
+  target : phone
+  severity : soft
+  weight : 15
+  threshold : 0.1
+  kink : 0.2
+
+- rule : DuplicateRule
+  target : id
+  severity : critical
+  weight : 15
+
+- rule : DuplicateRule
+  target : [id, name]
+  severity : soft
+  weight : 10
+  threshold : 0.05
+  kink : 0.2
