@@ -3,8 +3,9 @@ from qualitygate.core.context import ValidationContext
 import time
 from qualitygate.core.result import RuleResult
 from qualitygate.core.enums import ValidationStatus, ExecutionStatus, Severity
+from qualitygate.rules.registry import register
 
-
+@register
 class SchemaRule(ValidationRule):
     rule_name = "SchemaRule"
     rule_category = "STRUCTURE"
@@ -13,33 +14,29 @@ class SchemaRule(ValidationRule):
 
     def validate(self, context):
         started = time.perf_counter()
-        expected = self.params["expected_schema"]
-        actual = context.evidence
 
-        """
-        in schema rule we have evidence and actual and we check for the column data type mismatches and cardinality issues
-        actual = {
-        "id" : "string", "name" : "string", "age": "int"
-        }
-
-        expected = {
-        "id" : "int", "name" : "string", "age": "int"
-        }
-        """
+        #guard for evidence - None
+        if context.evidence is None :
+            elapsed_time_guard = (time.perf_counter() - started) * 1000
+            return RuleResult(
+                rule_name= self.rule_name,
+                rule_category= self.rule_category,
+                target = None,
+                execution_status= ExecutionStatus.SKIPPED,
+                execution_time_ms= elapsed_time_guard,
+                validation_status= ValidationStatus.NOT_EVALUATED,
+                severity= self.severity,
+                weight= self.weight,
+                evidence= "No evidence available — schema not evaluated",
+                risk = 0.0                
+            )
 
         #columns present
-        missing_columns = set(expected) - set(actual)
-        additional_columns = set(actual) - set(expected)
+        missing_columns = context.evidence["missing_columns"]
+        additional_columns = context.evidence["extra_columns"]
 
-        #data type
-        type_mismatch = {}
-        for column in expected.keys() & actual.keys():
-            if expected[column] != actual[column]:
-                type_mismatch[column] = {
-                                    "expected" : expected[column],
-                                    "actual" : actual[column] }       
 
-        if not missing_columns and not additional_columns and not type_mismatch:
+        if not missing_columns and not additional_columns:
             verdict = ValidationStatus.PASS
             risk = 0.0
             evidence = "Schema matches expected schema"
@@ -47,8 +44,7 @@ class SchemaRule(ValidationRule):
             verdict = ValidationStatus.FAIL
             risk = 1.0
             evidence = (f"Schema mismatch — missing: {missing_columns or 'none'}, "
-                        f"extra: {additional_columns or 'none'}, "
-                        f"type mismatches: {list(type_mismatch) or 'none'}")
+                        f"extra: {additional_columns or 'none'}, ")
 
 
         elapsed_time = (time.perf_counter() - started) * 1000
@@ -65,8 +61,7 @@ class SchemaRule(ValidationRule):
             evidence= evidence,
             metrics= {
                 "missing_columns" : list(missing_columns),
-                "additional_columns" : list(additional_columns),
-                "type_mismatch" : type_mismatch
+                "additional_columns" : list(additional_columns)
             },
             risk = risk
 
