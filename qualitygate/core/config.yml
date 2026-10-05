@@ -1,12 +1,17 @@
 #config.yaml (dummy config)
 
+- rule : SchemaRule
+  severity : critical
+  weight : 15
+  target : null
+
 - rule: NullRule
   target : id
   severity : critical
   weight : 15
 
 - rule: NullRule
-  target : phone
+  target : name
   severity : soft
   weight : 15
   threshold : 0.1
@@ -21,5 +26,12 @@
   target : [id, name]
   severity : soft
   weight : 10
+  threshold : 0.05
+  kink : 0.2
+
+- rule : DuplicateRule
+  target : [name, salary]
+  severity : soft
+  weight : 10 
   threshold : 0.05
   kink : 0.2
